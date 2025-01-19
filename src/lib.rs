@@ -319,6 +319,8 @@ impl Tetris {
         ) {
             self.game_over = true;
             self.current_tetromino = None;
+            self.tetromino_x = 0;
+            self.tetromino_y = 0;
         }
     }
 
