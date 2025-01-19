@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tetris</title>
+</head>
+<body>
+<canvas id="canvas" width="300" height="600" style="border:1px solid black;"></canvas>
+<script type="module">
+    import init, {Tetris} from './pkg/wastrs.js';
+
+    async function main() {
+        await init();
+        const tetris = new Tetris('canvas');
+        tetris.start();
+
+        function draw() {
+            tetris.render();
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('keydown', (event) => {
+            if (tetris.game_over) {
+                tetris.start();
+                return;
+            }
+
+            switch (event.key) {
+                case 'ArrowDown':
+                case 's':
+                    tetris.move_down();
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    tetris.move_left();
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    tetris.move_right();
+                    break;
+                case 'r':
+                    tetris.start();
+                    break;
+                case 'q':
+                case 'Shift':
+                    tetris.rotate_counterclockwise();
+                    break;
+                case 'e':
+                case 'Control':
+                    tetris.rotate_clockwise();
+                    break;
+            }
+        });
+        draw();
+    }
+
+    main();
+</script>
+</body>
+</html>

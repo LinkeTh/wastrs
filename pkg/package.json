@@ -1,0 +1,25 @@
+{
+  "name": "wastrs",
+  "type": "module",
+  "collaborators": [
+    "Thomas Linke <linket@ymail.com>"
+  ],
+  "description": "A Rust-based Tetris clone using WebAssembly (Wasm) for the web.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LinkeTh/wastrs/"
+  },
+  "files": [
+    "wastrs_bg.wasm",
+    "wastrs.js",
+    "wastrs.d.ts",
+    "LICENSE.md"
+  ],
+  "main": "wastrs.js",
+  "types": "wastrs.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

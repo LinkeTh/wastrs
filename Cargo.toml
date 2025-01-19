@@ -1,0 +1,18 @@
+[package]
+name = "wastrs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Thomas Linke <linket@ymail.com>"]
+description = "A Rust-based Tetris clone using WebAssembly (Wasm) for the web."
+repository = "https://github.com/LinkeTh/wastrs/"
+license = "MIT"
+
+[dependencies]
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ["console", "CanvasRenderingContext2d", "HtmlCanvasElement", "Window", "Document", "Performance"] }
+rand = "0.8"
+getrandom = { version = "0.2", features = ["js"] }
+lazy_static = "1.5.0"
+
+[lib]
+crate-type = ["cdylib"]
