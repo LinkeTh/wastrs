@@ -8,9 +8,9 @@ export class Tetris {
   move_left(): void;
   move_right(): void;
   start(): void;
+  is_game_over(): boolean;
   rotate_clockwise(): void;
   rotate_counterclockwise(): void;
-  game_over: boolean;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -18,14 +18,13 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly __wbg_tetris_free: (a: number, b: number) => void;
-  readonly __wbg_get_tetris_game_over: (a: number) => number;
-  readonly __wbg_set_tetris_game_over: (a: number, b: number) => void;
   readonly tetris_new: (a: number, b: number) => [number, number, number];
   readonly tetris_render: (a: number) => void;
   readonly tetris_move_down: (a: number) => void;
   readonly tetris_move_left: (a: number) => void;
   readonly tetris_move_right: (a: number) => void;
   readonly tetris_start: (a: number) => void;
+  readonly tetris_is_game_over: (a: number) => number;
   readonly tetris_rotate_clockwise: (a: number) => void;
   readonly tetris_rotate_counterclockwise: (a: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;

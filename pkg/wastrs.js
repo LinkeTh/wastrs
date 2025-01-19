@@ -117,19 +117,6 @@ export class Tetris {
         wasm.__wbg_tetris_free(ptr, 0);
     }
     /**
-     * @returns {boolean}
-     */
-    get game_over() {
-        const ret = wasm.__wbg_get_tetris_game_over(this.__wbg_ptr);
-        return ret !== 0;
-    }
-    /**
-     * @param {boolean} arg0
-     */
-    set game_over(arg0) {
-        wasm.__wbg_set_tetris_game_over(this.__wbg_ptr, arg0);
-    }
-    /**
      * @param {string} canvas_id
      */
     constructor(canvas_id) {
@@ -157,6 +144,13 @@ export class Tetris {
     }
     start() {
         wasm.tetris_start(this.__wbg_ptr);
+    }
+    /**
+     * @returns {boolean}
+     */
+    is_game_over() {
+        const ret = wasm.tetris_is_game_over(this.__wbg_ptr);
+        return ret !== 0;
     }
     rotate_clockwise() {
         wasm.tetris_rotate_clockwise(this.__wbg_ptr);

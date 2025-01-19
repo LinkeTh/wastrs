@@ -20,7 +20,10 @@
         }
 
         window.addEventListener('keydown', (event) => {
-            if (tetris.game_over) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (tetris.is_game_over()) {
                 tetris.start();
                 return;
             }

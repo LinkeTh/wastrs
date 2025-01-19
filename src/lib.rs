@@ -47,7 +47,7 @@ pub struct Tetris {
     tetromino_y: i32,
     last_update_time: f64,
     speed: f64,
-    pub game_over: bool,
+    game_over: bool,
     score: u32,
 }
 
@@ -181,6 +181,10 @@ impl Tetris {
         self.tetromino_y = 1;
         self.game_over = false;
         self.score = 0;
+    }
+
+    pub fn is_game_over(&self) -> bool {
+        self.game_over
     }
 
     pub fn rotate_clockwise(&mut self) {
