@@ -5,7 +5,7 @@
     <title>Tetris</title>
 </head>
 <body>
-<canvas id="canvas" width="300" height="600" style="border:1px solid black;"></canvas>
+<canvas id="canvas"></canvas>
 <script type="module">
     import init, {Tetris} from './pkg/wastrs.js';
 
@@ -20,8 +20,6 @@
         }
 
         window.addEventListener('keydown', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
 
             if (tetris.is_game_over()) {
                 tetris.start();
@@ -29,28 +27,34 @@
             }
 
             switch (event.key) {
-                case 'ArrowDown':
-                case 's':
-                    tetris.move_down();
-                    break;
-                case 'ArrowLeft':
-                case 'a':
-                    tetris.move_left();
-                    break;
-                case 'ArrowRight':
-                case 'd':
-                    tetris.move_right();
-                    break;
                 case 'r':
+                    event.preventDefault();
                     tetris.start();
                     break;
                 case 'q':
                 case 'Shift':
+                    event.preventDefault();
                     tetris.rotate_counterclockwise();
                     break;
                 case 'e':
                 case 'Control':
+                    event.preventDefault();
                     tetris.rotate_clockwise();
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    event.preventDefault();
+                    tetris.move_down();
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    event.preventDefault();
+                    tetris.move_left();
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    event.preventDefault();
+                    tetris.move_right();
                     break;
             }
         });

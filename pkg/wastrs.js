@@ -319,6 +319,12 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_setfont_42a163ef83420b93 = function(arg0, arg1, arg2) {
         arg0.font = getStringFromWasm0(arg1, arg2);
     };
+    imports.wbg.__wbg_setheight_da683a33fa99843c = function(arg0, arg1) {
+        arg0.height = arg1 >>> 0;
+    };
+    imports.wbg.__wbg_setwidth_c5fed9f5e7f0b406 = function(arg0, arg1) {
+        arg0.width = arg1 >>> 0;
+    };
     imports.wbg.__wbg_static_accessor_GLOBAL_88a902d13a557d07 = function() {
         const ret = typeof global === 'undefined' ? null : global;
         return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);

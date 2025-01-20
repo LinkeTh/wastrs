@@ -5,8 +5,12 @@ use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
-const ROW_COUNT: i32 = 24;
-const COLUMN_COUNT: i32 = 10;
+const ROW_COUNT: i8 = 24;
+const COLUMN_COUNT: i8 = 10;
+const BLOCK_PIXEL: i8 = 30;
+const IGNORE_ROWS: i8 = 4; // skip first 4 rows (those are offscreen for spawning new tetrominos)
+const WIDTH: f64 = COLUMN_COUNT as f64 * BLOCK_PIXEL as f64;
+const HEIGTH: f64 = (ROW_COUNT - IGNORE_ROWS) as f64 * BLOCK_PIXEL as f64;
 
 fn create_wall_kicks(table: &[[(i8, i8); 6]]) -> HashMap<(i8, i8), Vec<(i8, i8)>> {
     table
@@ -15,6 +19,11 @@ fn create_wall_kicks(table: &[[(i8, i8); 6]]) -> HashMap<(i8, i8), Vec<(i8, i8)>
         .collect()
 }
 
+// holds (x,y) translations to test for every state change
+// the first element in every row is the index of the map and represents the state change e.g. (0,1) = 0 >> 1 or (3,2) 3 >> 2
+// the next 5 elements are the translations to test, first translations is always the basic rotation
+// the O tetromino does not wall kick
+// the I tetromino has a different translations than the rest
 lazy_static! {
     static ref WALL_KICKS_I: HashMap<(i8, i8), Vec<(i8, i8)>> = create_wall_kicks(&[
         [(0, 1), (0, 0), (-2, 0), (1, 0), (-2, -1), (1, 2)],
@@ -43,8 +52,8 @@ pub struct Tetris {
     context: CanvasRenderingContext2d,
     board: [[u8; COLUMN_COUNT as usize]; ROW_COUNT as usize],
     current_tetromino: Option<Tetromino>,
-    tetromino_x: i32,
-    tetromino_y: i32,
+    tetromino_x: i8,
+    tetromino_y: i8,
     last_update_time: f64,
     speed: f64,
     game_over: bool,
@@ -65,6 +74,9 @@ impl Tetris {
             .ok_or_else(|| JsValue::from("Canvas element not found"))?
             .dyn_into::<HtmlCanvasElement>()
             .map_err(|_| JsValue::from("Failed to cast to HtmlCanvasElement"))?;
+
+        canvas.set_width(WIDTH as u32);
+        canvas.set_height(HEIGTH as u32);
 
         let context: CanvasRenderingContext2d = canvas
             .get_context("2d")?
@@ -88,10 +100,9 @@ impl Tetris {
     pub fn render(&mut self) {
         let window = web_sys::window().expect("No access to window object");
 
-        self.context.clear_rect(0.0, 0.0, 300.0, 600.0);
+        self.context.clear_rect(0.0, 0.0, WIDTH, HEIGTH);
 
-        // skip first 4 rows (those are offscreen for spawning new tetrominos)
-        for y in 4..ROW_COUNT {
+        for y in IGNORE_ROWS..ROW_COUNT {
             for x in 0..COLUMN_COUNT {
                 let color = if self.board[y as usize][x as usize] == 0 {
                     "#000000"
@@ -100,43 +111,47 @@ impl Tetris {
                 };
 
                 self.context.set_fill_style_str(color);
-                self.context
-                    .fill_rect(x as f64 * 30.0, (y - 4) as f64 * 30.0, 30.0, 30.0);
+                self.context.fill_rect(
+                    x as f64 * BLOCK_PIXEL as f64,
+                    (y - IGNORE_ROWS) as f64 * BLOCK_PIXEL as f64,
+                    BLOCK_PIXEL as f64,
+                    BLOCK_PIXEL as f64,
+                );
             }
         }
 
-        if !self.game_over {
-            let now = window.performance().expect("No performance API").now();
+        if self.game_over {
+            self.display_game_over();
+            return;
+        }
 
-            if now - self.last_update_time >= self.speed {
-                self.move_down();
-                self.last_update_time = now;
-            }
+        let now = window.performance().expect("No performance API").now();
+        if now - self.last_update_time >= self.speed {
+            self.move_down();
+            self.last_update_time = now;
+        }
 
-            self.display_score();
+        self.display_score();
 
-            if let Some(tetromino) = &self.current_tetromino {
-                for (tetromino_y, row) in tetromino.shape.iter().enumerate() {
-                    for (tetromino_x, &cell) in row.iter().enumerate() {
-                        if cell != 0 {
-                            let x = self.tetromino_x + tetromino_x as i32;
-                            let y = self.tetromino_y + tetromino_y as i32;
+        if let Some(tetromino) = &self.current_tetromino {
+            for (tetromino_y, row) in tetromino.shape.iter().enumerate() {
+                for (tetromino_x, &cell) in row.iter().enumerate() {
+                    if cell != 0 {
+                        let x = self.tetromino_x + tetromino_x as i8;
+                        let y = self.tetromino_y + tetromino_y as i8;
 
-                            if (0..COLUMN_COUNT).contains(&x) && (0..ROW_COUNT).contains(&y) {
-                                self.context.set_fill_style_str(&tetromino.color);
-                                self.context.fill_rect(
-                                    x as f64 * 30.0,
-                                    (y - 4) as f64 * 30.0,
-                                    30.0,
-                                    30.0,
-                                );
-                            }
+                        if (0..COLUMN_COUNT).contains(&x) && (0..ROW_COUNT).contains(&y) {
+                            self.context.set_fill_style_str(&tetromino.color);
+                            self.context.fill_rect(
+                                x as f64 * BLOCK_PIXEL as f64,
+                                (y - IGNORE_ROWS) as f64 * BLOCK_PIXEL as f64,
+                                BLOCK_PIXEL as f64,
+                                BLOCK_PIXEL as f64,
+                            );
                         }
                     }
                 }
             }
-        } else {
-            self.display_game_over()
         }
     }
 
@@ -174,7 +189,7 @@ impl Tetris {
     pub fn start(&mut self) {
         web_sys::console::log_1(&"Start game!".to_string().into());
 
-        self.context.clear_rect(0.0, 0.0, 300.0, 600.0);
+        self.context.clear_rect(0.0, 0.0, WIDTH, HEIGTH);
         self.board = [[0; COLUMN_COUNT as usize]; ROW_COUNT as usize];
         self.current_tetromino = self.get_random_type();
         self.tetromino_x = 3;
@@ -231,7 +246,7 @@ impl Tetris {
 
     fn clear_full_lines(&mut self) {
         let mut lines_cleared = 0;
-        for y in 4..ROW_COUNT as usize {
+        for y in IGNORE_ROWS as usize..ROW_COUNT as usize {
             if self.board[y].iter().all(|&cell| cell != 0) {
                 lines_cleared += 1;
                 for row in (1..=y).rev() {
@@ -273,8 +288,8 @@ impl Tetris {
             for (tetromino_y, row) in tetromino.shape.iter().enumerate() {
                 for (tetromino_x, &cell) in row.iter().enumerate() {
                     if cell != 0 {
-                        let x = self.tetromino_x + tetromino_x as i32;
-                        let y = self.tetromino_y + tetromino_y as i32;
+                        let x = self.tetromino_x + tetromino_x as i8;
+                        let y = self.tetromino_y + tetromino_y as i8;
 
                         if (4..ROW_COUNT).contains(&y) && (0..COLUMN_COUNT).contains(&x) {
                             self.board[y as usize][x as usize] = cell;
@@ -327,11 +342,11 @@ impl Tetris {
     fn try_wall_kick(
         tetromino: &Tetromino,
         board: &[[u8; COLUMN_COUNT as usize]; ROW_COUNT as usize],
-        y_to_check: &i32,
-        x_to_check: &i32,
+        y_to_check: &i8,
+        x_to_check: &i8,
         transition: (i8, i8),
         clockwise: bool,
-    ) -> Option<(i32, i32)> {
+    ) -> Option<(i8, i8)> {
         let test_xy: &[(i8, i8)] = if tetromino.r#type == TetrominoType::O {
             &[(0, 0)]
         } else if tetromino.r#type == TetrominoType::I {
@@ -343,8 +358,8 @@ impl Tetris {
         for &(x, y) in test_xy.iter() {
             let mut copy = tetromino.clone();
 
-            let new_y = y_to_check + y as i32;
-            let new_x = x_to_check + x as i32;
+            let new_y = y_to_check + y;
+            let new_x = x_to_check + x;
 
             if clockwise {
                 copy.rotate_clockwise();
@@ -363,19 +378,19 @@ impl Tetris {
     fn check_collision(
         tetromino: &Tetromino,
         board: &[[u8; COLUMN_COUNT as usize]; ROW_COUNT as usize],
-        y_to_check: &i32,
-        x_to_check: &i32,
+        y_to_check: &i8,
+        x_to_check: &i8,
     ) -> bool {
-        let mut board_y: i32;
-        let mut board_x: i32;
+        let mut board_y: i8;
+        let mut board_x: i8;
 
         for tetromino_y in 0..tetromino.shape.len() {
             for tetromino_x in 0..tetromino.shape[0].len() {
                 if tetromino.shape[tetromino_y][tetromino_x] == 0 {
                     continue;
                 }
-                board_y = tetromino_y as i32 + y_to_check;
-                board_x = tetromino_x as i32 + x_to_check;
+                board_y = tetromino_y as i8 + y_to_check;
+                board_x = tetromino_x as i8 + x_to_check;
                 if board_x < 0 {
                     return true;
                 }
